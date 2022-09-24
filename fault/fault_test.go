@@ -1,6 +1,7 @@
 package fault
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -258,5 +259,19 @@ func Test_WrapAlreadyWrappedError(t *testing.T) {
 	actual := err3.String()
 	if actual != expected {
 		t.Errorf("Expected: %s, Actual: %s", expected, actual)
+	}
+}
+
+func Test_ErrorsIsStillWorksAsExpected(t *testing.T) {
+	originalErr := context.Canceled
+	err2 := fmt.Errorf("something bad happened: %w", originalErr)
+	err3 := SystemWrap(err2, "test", "test", "what the hell")
+	if !errors.Is(err3, context.Canceled) {
+		t.Error("err3 was expected to match context.Canceled")
+	}
+
+	err4 := SystemWrap(err3, "test", "test", "no freaking way")
+	if !errors.Is(err4, context.Canceled) {
+		t.Error("err4 was expected to match context.Canceled")
 	}
 }

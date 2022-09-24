@@ -177,14 +177,24 @@ type SystemError struct {
 	stack string
 }
 
+// Error returns the error message.
+func (e *SystemError) Error() string {
+	pad := ""
+	sb := strings.Builder{}
+	lastIndex := len(e.msgs) - 1
+	for i := lastIndex; i >= 0; i-- {
+		if i < lastIndex {
+			sb.WriteString(fmt.Sprintf("\n%s", pad))
+		}
+		sb.WriteString(e.msgs[i])
+		pad = pad + padding
+	}
+	return sb.String()
+}
+
 // String returns the error message.
 func (e *SystemError) String() string {
 	return e.Error()
-}
-
-// Error returns the error message.
-func (e *SystemError) Error() string {
-	return e.err.Error()
 }
 
 // StackTrace returns the error message including the stack trace.
@@ -236,30 +246,19 @@ func Systemf(pkg string, function string, format string, a ...interface{}) *Syst
 // SystemWrap creates a new SystemError fault, wrapping an
 // existing error and preserving the entire stack trace.
 func SystemWrap(err error, pkg string, function string, msg string) *SystemError {
-	var wrappedErr error
+	errMsg := fmt.Sprintf("%s.%s: %s", pkg, function, msg)
 	var msgs []string
 
-	// Purposefully using a type assertion instead of checking against all underlying errors
-	// using the errors.As function so that no information is lost when wrapping.
 	// nolint: errorlint
 	if sysErr, ok := err.(*SystemError); ok {
-		pad := padding
-		sb := strings.Builder{}
-		for i := len(sysErr.msgs) - 1; i >= 0; i-- {
-			m := sysErr.msgs[i]
-			sb.WriteString(fmt.Sprintf("\n%s%s", pad, m))
-			pad = pad + padding
-		}
-		wrappedErr = fmt.Errorf("%s.%s: %s%s", pkg, function, msg, sb.String())
-		msgs = sysErr.msgs
+		msgs = append(sysErr.msgs, errMsg)
 	} else {
-		wrappedErr = fmt.Errorf("%s.%s: %s\n%s%v", pkg, function, msg, padding, err)
-		msgs = []string{err.Error()}
+		msgs = []string{err.Error(), errMsg}
 	}
 
 	return &SystemError{
-		err:   wrappedErr,
-		msgs:  append(msgs, fmt.Sprintf("%s.%s: %s", pkg, function, msg)),
+		err:   fmt.Errorf("%s\n%s%w", errMsg, padding, err),
+		msgs:  msgs,
 		stack: stack.Capture().String(),
 	}
 }
