@@ -273,3 +273,21 @@ func SystemWrapf(
 	a ...interface{}) *SystemError {
 	return SystemWrap(err, pkg, function, fmt.Sprintf(format, a...))
 }
+
+// As is similar, but a slightly different take on the errors.As function.
+// Rather than matching on an interface or type it matches on a generic predicate function.
+// This has the benefit that it can be applied with functions which return private/internal interfaces or types.
+// For example, it can be used with the status.FromError function from the google.golang.org/grpc package.
+func As[T any](
+	err error,
+	predicate func(error) (T, bool),
+) (T, bool) {
+	var zeroValue T
+	for err != nil {
+		if t, ok := predicate(err); ok {
+			return t, true
+		}
+		err = errors.Unwrap(err)
+	}
+	return zeroValue, false
+}

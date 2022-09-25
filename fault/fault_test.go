@@ -275,3 +275,46 @@ func Test_ErrorsIsStillWorksAsExpected(t *testing.T) {
 		t.Error("err4 was expected to match context.Canceled")
 	}
 }
+
+type FooBar interface {
+	Foo(int) int
+}
+
+type BarError string
+
+func (b BarError) Error() string {
+	return string(b)
+}
+
+func (b BarError) Foo(x int) int {
+	return x * 2
+}
+
+func Test_As(t *testing.T) {
+	bar := BarError("this is a bar error")
+	err1 := SystemWrap(bar, "aaa", "BBB", "something went wrong")
+	err2 := SystemWrap(err1, "ccc", "DDD", "ops what happened")
+
+	actual := err2.Error()
+	expected := "ccc.DDD: ops what happened\n   aaa.BBB: something went wrong\n      this is a bar error"
+
+	if actual != expected {
+		t.Errorf("Expected: %s, Actual: %s", expected, actual)
+	}
+
+	predicate := func(err error) (FooBar, bool) {
+		if fooBar, ok := err.(FooBar); ok {
+			return fooBar, true
+		}
+		return nil, false
+	}
+
+	fooBar, ok := As(err2, predicate)
+	if !ok {
+		t.Error("As method was expected to return true.")
+	}
+	result := fooBar.Foo(5)
+	if result != 10 {
+		t.Error("As method was expected to return a BarError.")
+	}
+}
