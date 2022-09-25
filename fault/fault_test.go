@@ -303,6 +303,7 @@ func Test_As(t *testing.T) {
 	}
 
 	predicate := func(err error) (FooBar, bool) {
+		// nolint: errorlint
 		if fooBar, ok := err.(FooBar); ok {
 			return fooBar, true
 		}
