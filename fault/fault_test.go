@@ -238,15 +238,19 @@ func Test_FormatWithPlus_WithLayersOfSystemErrors_ReturnsSameAsStackTrace(t *tes
 	f2 := SystemWrap(f1, "d", "e", "f")
 	f3 := SystemWrap(f2, "g", "h", "i")
 
-	expected := f3.StackTrace()
-	notExpected := f3.Error()
+	onlyStack := f3.StackTrace()
+	onlyError := f3.Error()
+	expected := onlyError + "\n" + onlyStack
 
 	actual := fmt.Sprintf("%+v", f3)
 	if actual != expected {
 		t.Errorf(expectedFormat, expected, actual)
 	}
-	if actual == notExpected {
+	if actual == onlyError {
 		t.Error("The '+v' formatter should include a stack trace.")
+	}
+	if actual == onlyStack {
+		t.Error("The '+v' formatter should include the error message.")
 	}
 }
 

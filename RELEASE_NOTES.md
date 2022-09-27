@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## 1.3.1
+
+Fixed the format function for faults.
+
 ## 1.3.0
 
 Changed `StackTrace()` to only return the formatted stacktrace and `String()` to return the error message with the stacktrace. Use `Error()` to only receive the error message without a stacktrace.

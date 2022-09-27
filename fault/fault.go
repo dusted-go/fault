@@ -214,7 +214,7 @@ func (e *SystemError) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('+') {
-			fmt.Fprintf(s, "%s", e.StackTrace())
+			fmt.Fprintf(s, "%s", e.String())
 			return
 		}
 		fallthrough
