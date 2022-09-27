@@ -192,14 +192,14 @@ func (e *SystemError) Error() string {
 	return sb.String()
 }
 
-// String returns the error message.
-func (e *SystemError) String() string {
-	return e.Error()
-}
-
 // StackTrace returns the error message including the stack trace.
 func (e *SystemError) StackTrace() string {
-	return fmt.Sprintf("\n%s\n%s", e.err, e.stack)
+	return e.stack
+}
+
+// String returns the error message and stack trace.
+func (e *SystemError) String() string {
+	return fmt.Sprintf("%s\n%s", e.Error(), e.StackTrace())
 }
 
 // Unwrap returns the original underlying error.

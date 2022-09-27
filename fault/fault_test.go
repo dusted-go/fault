@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -170,8 +171,8 @@ func Test_String_WithSingleSystemError(t *testing.T) {
 
 	actual := f.String()
 
-	expected := "a.b: c"
-	if actual != expected {
+	expected := "a.b: c\n\nat"
+	if !strings.HasPrefix(actual, expected) {
 		t.Errorf(expectedFormat, expected, actual)
 	}
 }
@@ -196,8 +197,8 @@ func Test_String_WithLayersOfSystemErrorsAndOneNonSystemError(t *testing.T) {
 
 	actual := f3.String()
 
-	expected := "g.h: i\n   d.e: f\n      foo bar"
-	if actual != expected {
+	expected := "g.h: i\n   d.e: f\n      foo bar\n\nat "
+	if !strings.HasPrefix(actual, expected) {
 		t.Errorf(expectedFormat, expected, actual)
 	}
 }
@@ -255,10 +256,10 @@ func Test_WrapAlreadyWrappedError(t *testing.T) {
 	err2 := fmt.Errorf("wrapped around original error: %w", err1)
 	err3 := SystemWrap(err2, "pkg", "func", "fancy error")
 
-	expected := "pkg.func: fancy error\n   wrapped around original error: original error"
+	expected := "pkg.func: fancy error\n   wrapped around original error: original error\n\nat "
 	actual := err3.String()
-	if actual != expected {
-		t.Errorf("Expected: %s, Actual: %s", expected, actual)
+	if !strings.HasPrefix(actual, expected) {
+		t.Errorf(expectedFormat, expected, actual)
 	}
 }
 
