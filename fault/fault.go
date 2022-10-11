@@ -219,8 +219,7 @@ func (e *SystemError) Format(s fmt.State, verb rune) {
 		}
 		fallthrough
 	case 's':
-		// nolint: errcheck
-		io.WriteString(s, e.Error())
+		_, _ = io.WriteString(s, e.Error())
 	case 'q':
 		fmt.Fprintf(s, "%q", e.Error())
 	}
@@ -245,7 +244,7 @@ func Systemf(format string, a ...interface{}) *SystemError {
 func SystemWrap(err error, msg string) *SystemError {
 	var msgs []string
 
-	// nolint: errorlint
+	// nolint: errorlint // Don't want to check the entire chain, just outer most error:
 	if sysErr, ok := err.(*SystemError); ok {
 		msgs = append(sysErr.msgs, msg)
 	} else {
