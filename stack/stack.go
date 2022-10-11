@@ -13,6 +13,10 @@ func (t *Trace) String() string {
 	frames := runtime.CallersFrames(*t)
 	for {
 		f, more := frames.Next()
+		if strings.HasSuffix(f.File, "stack/stack.go") ||
+			strings.HasSuffix(f.File, "fault/fault.go") {
+			continue
+		}
 		s.WriteString(
 			fmt.Sprintf("\nat %s:%d\n   --> %s", f.File, f.Line, f.Function),
 		)

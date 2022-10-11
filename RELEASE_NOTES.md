@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+## 1.4.0
+
+- Refactored the `fault.System`, `fault.Systemf`, `fault.SystemWrap` and `fault.SystemWrapf` to remove the `pkg` and `function` variables. One can decorate their error messages with those values only if they want.
+- Improved the `String()` function of `stack.Trace` to skip a self reference in the trace.
+
 ## 1.3.1
 
 Fixed the format function for faults.

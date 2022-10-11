@@ -156,22 +156,22 @@ func Test_ErrorMessages_WithMultipleUserErrors(t *testing.T) {
 // ------
 
 func Test_Error_WithSingleSystemError(t *testing.T) {
-	f := System("a", "b", "c")
+	f := System("c")
 
 	actual := f.Error()
 
-	expected := "a.b: c"
+	expected := "c"
 	if actual != expected {
 		t.Errorf(expectedFormat, expected, actual)
 	}
 }
 
 func Test_String_WithSingleSystemError(t *testing.T) {
-	f := System("a", "b", "c")
+	f := System("c")
 
 	actual := f.String()
 
-	expected := "a.b: c\n\nat"
+	expected := "c\n\nat"
 	if !strings.HasPrefix(actual, expected) {
 		t.Errorf(expectedFormat, expected, actual)
 	}
@@ -179,12 +179,12 @@ func Test_String_WithSingleSystemError(t *testing.T) {
 
 func Test_Error_WithLayersOfSystemErrorsAndOneNonSystemError(t *testing.T) {
 	f1 := errors.New("foo bar")
-	f2 := SystemWrap(f1, "d", "e", "f")
-	f3 := SystemWrap(f2, "g", "h", "i")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
 
 	actual := f3.Error()
 
-	expected := "g.h: i\n   d.e: f\n      foo bar"
+	expected := "i\n   f\n      foo bar"
 	if actual != expected {
 		t.Errorf(expectedFormat, expected, actual)
 	}
@@ -192,34 +192,34 @@ func Test_Error_WithLayersOfSystemErrorsAndOneNonSystemError(t *testing.T) {
 
 func Test_String_WithLayersOfSystemErrorsAndOneNonSystemError(t *testing.T) {
 	f1 := errors.New("foo bar")
-	f2 := SystemWrap(f1, "d", "e", "f")
-	f3 := SystemWrap(f2, "g", "h", "i")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
 
 	actual := f3.String()
 
-	expected := "g.h: i\n   d.e: f\n      foo bar\n\nat "
+	expected := "i\n   f\n      foo bar\n\nat "
 	if !strings.HasPrefix(actual, expected) {
 		t.Errorf(expectedFormat, expected, actual)
 	}
 }
 
 func Test_Error_WithLayersOfSystemErrors(t *testing.T) {
-	f1 := System("a", "b", "c")
-	f2 := SystemWrap(f1, "d", "e", "f")
-	f3 := SystemWrap(f2, "g", "h", "i")
+	f1 := System("c")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
 
 	actual := f3.Error()
 
-	expected := "g.h: i\n   d.e: f\n      a.b: c"
+	expected := "i\n   f\n      c"
 	if actual != expected {
 		t.Errorf(expectedFormat, expected, actual)
 	}
 }
 
 func Test_FormatWithoutPlus_WithLayersOfSystemErrors_ReturnsSameAsError(t *testing.T) {
-	f1 := System("a", "b", "c")
-	f2 := SystemWrap(f1, "d", "e", "f")
-	f3 := SystemWrap(f2, "g", "h", "i")
+	f1 := System("c")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
 
 	expected := f3.Error()
 	notExpected := f3.StackTrace()
@@ -234,9 +234,9 @@ func Test_FormatWithoutPlus_WithLayersOfSystemErrors_ReturnsSameAsError(t *testi
 }
 
 func Test_FormatWithPlus_WithLayersOfSystemErrors_ReturnsSameAsStackTrace(t *testing.T) {
-	f1 := System("a", "b", "c")
-	f2 := SystemWrap(f1, "d", "e", "f")
-	f3 := SystemWrap(f2, "g", "h", "i")
+	f1 := System("c")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
 
 	onlyStack := f3.StackTrace()
 	onlyError := f3.Error()
@@ -258,9 +258,9 @@ func Test_WrapAlreadyWrappedError(t *testing.T) {
 
 	err1 := errors.New("original error")
 	err2 := fmt.Errorf("wrapped around original error: %w", err1)
-	err3 := SystemWrap(err2, "pkg", "func", "fancy error")
+	err3 := SystemWrap(err2, "fancy error")
 
-	expected := "pkg.func: fancy error\n   wrapped around original error: original error\n\nat "
+	expected := "fancy error\n   wrapped around original error: original error\n\nat "
 	actual := err3.String()
 	if !strings.HasPrefix(actual, expected) {
 		t.Errorf(expectedFormat, expected, actual)
@@ -270,14 +270,29 @@ func Test_WrapAlreadyWrappedError(t *testing.T) {
 func Test_ErrorsIsStillWorksAsExpected(t *testing.T) {
 	originalErr := context.Canceled
 	err2 := fmt.Errorf("something bad happened: %w", originalErr)
-	err3 := SystemWrap(err2, "test", "test", "what the hell")
+	err3 := SystemWrap(err2, "what the hell")
 	if !errors.Is(err3, context.Canceled) {
 		t.Error("err3 was expected to match context.Canceled")
 	}
 
-	err4 := SystemWrap(err3, "test", "test", "no freaking way")
+	err4 := SystemWrap(err3, "no freaking way")
 	if !errors.Is(err4, context.Canceled) {
 		t.Error("err4 was expected to match context.Canceled")
+	}
+}
+
+func Test_String_StackTraceWithoutFaultPackage(t *testing.T) {
+	f1 := errors.New("foo bar")
+	f2 := SystemWrap(f1, "f")
+	f3 := SystemWrap(f2, "i")
+
+	actual := f3.String()
+
+	t.Log(actual)
+
+	expected := "i\n   f\n      foo bar\n\nat "
+	if !strings.HasPrefix(actual, expected) {
+		t.Errorf(expectedFormat, expected, actual)
 	}
 }
 
@@ -297,11 +312,11 @@ func (b BarError) Foo(x int) int {
 
 func Test_As(t *testing.T) {
 	bar := BarError("this is a bar error")
-	err1 := SystemWrap(bar, "aaa", "BBB", "something went wrong")
-	err2 := SystemWrap(err1, "ccc", "DDD", "ops what happened")
+	err1 := SystemWrap(bar, "something went wrong")
+	err2 := SystemWrap(err1, "ops what happened")
 
 	actual := err2.Error()
-	expected := "ccc.DDD: ops what happened\n   aaa.BBB: something went wrong\n      this is a bar error"
+	expected := "ops what happened\n   something went wrong\n      this is a bar error"
 
 	if actual != expected {
 		t.Errorf("Expected: %s, Actual: %s", expected, actual)

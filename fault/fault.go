@@ -227,37 +227,33 @@ func (e *SystemError) Format(s fmt.State, verb rune) {
 }
 
 // System creates a new SystemError fault whilst preserving the stack trace.
-func System(pkg string, function string, msg string) *SystemError {
-	m := fmt.Sprintf("%s.%s: %s", pkg, function, msg)
-
+func System(msg string) *SystemError {
 	return &SystemError{
-		err:   errors.New(m),
-		msgs:  []string{m},
+		err:   errors.New(msg),
+		msgs:  []string{msg},
 		stack: stack.Capture().String(),
 	}
 }
 
 // Systemf creates a new SystemError fault whilst preserving the stack trace.
-func Systemf(pkg string, function string, format string, a ...interface{}) *SystemError {
-	msg := fmt.Sprintf(format, a...)
-	return System(pkg, function, msg)
+func Systemf(format string, a ...interface{}) *SystemError {
+	return System(fmt.Sprintf(format, a...))
 }
 
 // SystemWrap creates a new SystemError fault, wrapping an
 // existing error and preserving the entire stack trace.
-func SystemWrap(err error, pkg string, function string, msg string) *SystemError {
-	errMsg := fmt.Sprintf("%s.%s: %s", pkg, function, msg)
+func SystemWrap(err error, msg string) *SystemError {
 	var msgs []string
 
 	// nolint: errorlint
 	if sysErr, ok := err.(*SystemError); ok {
-		msgs = append(sysErr.msgs, errMsg)
+		msgs = append(sysErr.msgs, msg)
 	} else {
-		msgs = []string{err.Error(), errMsg}
+		msgs = []string{err.Error(), msg}
 	}
 
 	return &SystemError{
-		err:   fmt.Errorf("%s\n%s%w", errMsg, padding, err),
+		err:   fmt.Errorf("%s\n%s%w", msg, padding, err),
 		msgs:  msgs,
 		stack: stack.Capture().String(),
 	}
@@ -267,11 +263,9 @@ func SystemWrap(err error, pkg string, function string, msg string) *SystemError
 // existing error and preserving the entire stack trace.
 func SystemWrapf(
 	err error,
-	pkg string,
-	function string,
 	format string,
 	a ...interface{}) *SystemError {
-	return SystemWrap(err, pkg, function, fmt.Sprintf(format, a...))
+	return SystemWrap(err, fmt.Sprintf(format, a...))
 }
 
 // As is similar, but a slightly different take on the errors.As function.
